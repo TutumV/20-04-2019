@@ -1,0 +1,16 @@
+{
+  "name": "20-04-2019",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Artem Vorobyev",
+  "license": "ISC",
+  "dependencies": {
+    "es6-promise": "^4.2.6",
+    "express": "^4.16.4",
+    "isomorphic-fetch": "^2.2.1"
+  }
+}
