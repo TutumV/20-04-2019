@@ -17,6 +17,7 @@ mongoClient.connect(function (err) {
     }
     console.log("Connected");
     const db = mongoClient.db(dbName);
+    const collection = db.collection('documents');
 
 
     const listCurrency = ['AUD', 'AZN', 'GBP', 'AMD', 'BYN', 'BGN', 'BRL', 'HUF', 'HKD', 'DKK', 'USD', 'EUR', 'INR', 'KZT',
@@ -36,19 +37,18 @@ mongoClient.connect(function (err) {
                                         value: currency[cur].Value,
                                         nominal: currency[cur].Nominal,
                                         charcode: currency[cur].CharCode,
+                                        date: new Date(),
                                     }
                                 });
-                                const collection = db.collection('documents');
+                                let time = +new Date();
                                 let one = cleanedData.forEach(function (elem) {
-                                    let time = new Date();
-                                    let formatTime = time.toISOString();
                                     try {
                                         collection.insertOne({
                                             name: elem.name,
                                             value: elem.value,
                                             charcode: elem.charcode,
                                             nominal: elem.nominal,
-                                            date: formatTime,
+                                            date: time,
                                         }), function (err, result) {
                                             if (err) {
                                                 console.log(err);
@@ -59,15 +59,14 @@ mongoClient.connect(function (err) {
                                     } catch (e) {
                                         console.log(e);
                                     }
-                                    try {
+                                    try{
                                     MongoClient.close();
                                     } catch (e) {
-                                        console.log(e);
                                     }
                                     });
                                 let bodyContent = '<html>' +
                                     '<body>' +
-                                    '<table>' +
+                                    '<table border="5px" width="5px" height="100px">' +
                                     cleanedData.reduce((pv, cv) => {
                                         return pv + '' +
                                             '<tr>' +
@@ -76,6 +75,12 @@ mongoClient.connect(function (err) {
                                             '</td>' +
                                             '<td>' +
                                             cv.value +
+                                            '</td>' +
+                                            '<td>' +
+                                            cv.date +
+                                            '</td>' +
+                                            '<td>' +
+                                            cv.charcode +
                                             '</td>' +
                                             '</tr>'
                                     }, '') +
@@ -94,6 +99,36 @@ mongoClient.connect(function (err) {
                 });
             });
     });
+    app.get('/currency/:charcode', function (req, res) {
+        let charcode = req.params["charcode"];
+        const find = collection.find({'charcode': charcode}).sort({date: -1}).limit(-1).toArray(function (err, docs) {
+            if (err) {
+                console.log(err);
+            } else {
+                let response = '<html>' +
+                    '<body>' +
+                    '<table border="5px" width="5px" height="100px">' +
+                    '<tr>' +
+                    "Название" +
+                    '<td>' +
+                    docs[0].name +
+                    '</td>' +
+                    'Значение' +
+                    '<td>' +
+                    docs[0].value +
+                    '</td>' +
+                    'Код' +
+                    '<td>' +
+                    docs[0].charcode +
+                    '</td>' +
+                    '</tr>' +
+                    '</table>' +
+                    '</body>' +
+                    '</html>';
+                res.status(200).send(response);
+            }
+        });
+    })
 });
 
 app.listen(5000, function () {
